@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+
+# Data & Logs
+affect_logs.db
+tunnel.log
+tunnel_url.txt
+*.log
+
+# Binaries & Executables
+cloudflared.exe
+*.exe
+
+# Test Images
+*.jpg
+*.jpeg
+*.png
+!hud_rendered_test.jpg
+
+# Streamlit secrets
+.streamlit/secrets.toml

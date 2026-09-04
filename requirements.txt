@@ -1,0 +1,10 @@
+mediapipe>=0.10.14
+opencv-python-headless>=4.9.0
+numpy>=1.24.0
+pandas>=2.0.0
+streamlit>=1.32.0
+plotly>=5.19.0
+requests>=2.31.0
+deepface>=0.0.90
+tf-keras>=2.15.0
+pillow>=10.0.0

@@ -34,6 +34,14 @@ from database.db_handler import SeniorAffectDBHandler
 from core.multimodal_analyzer import MultimodalAffectAnalyzer
 from core.assessment import CognitiveConditionAssessment
 
+# WebRTC 실시간 브라우저 스트리밍 모듈 안전 로드
+try:
+    from streamlit_webrtc import webrtc_streamer, RTCConfiguration, VideoProcessorBase, WebRtcMode
+    import av
+    HAS_WEBRTC = True
+except Exception:
+    HAS_WEBRTC = False
+
 # ───── Streamlit 페이지 설정 ─────
 st.set_page_config(
     page_title="AI 다중 생체신호 컨디션 & 인지 모니터",
@@ -92,6 +100,28 @@ def load_multimodal_analyzer():
     return MultimodalAffectAnalyzer()
 
 
+if HAS_WEBRTC:
+    class RealtimeFaceProcessor(VideoProcessorBase):
+        """WebRTC 30fps 실시간 브라우저 비디오 프로세서"""
+        def __init__(self):
+            self.analyzer = load_multimodal_analyzer()
+            self.last_analysis = None
+            self.frame_count = 0
+
+        def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+            img = frame.to_ndarray(format="bgr24")
+            img = cv2.flip(img, 1)
+            self.frame_count += 1
+
+            if self.frame_count % 3 == 0 or self.last_analysis is None:
+                analysis = self.analyzer.analyze_frame(img)
+                if analysis:
+                    self.last_analysis = analysis
+
+            rendered = self.analyzer.render_hud(img, self.last_analysis)
+            return av.VideoFrame.from_ndarray(rendered, format="bgr24")
+
+
 def main():
     db = load_db()
 
@@ -133,21 +163,57 @@ def main():
     with col_left:
         st.markdown("### 🎥 다중 생체신호 거울 (LIVE)")
 
-        tab_browser, tab_local = st.tabs([
-            "📱 모바일/웹 카메라 (외부·클라우드 추천)",
+        tab_stream, tab_snap, tab_local = st.tabs([
+            "🎥 실시간 라이브 영상 (연속 스트리밍)",
+            "📷 간편 사진 촬영 (1초 즉시 진단)",
             "💻 로컬 PC 웹캠 (내 컴퓨터 전용)"
         ])
 
-        # ── 1. 스마트폰/웹 브라우저 카메라 모드 (클라우드 상시 접속 최적화) ──
-        with tab_browser:
+        # ── 1. WebRTC 실시간 연속 스트리밍 (웹/스마트폰 브라우저) ──
+        with tab_stream:
             st.markdown("""
-            <div style="background: #f1f5f9; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.92rem; color: #334155;">
-                ✨ <b>스마트폰, 태블릿, 외부 브라우저</b>로 접속하셨을 때 사용합니다.<br>
-                카메라로 얼굴을 촬영하시면 <b>안면 랜드마크 선, 입술·눈가 바이오마커, 표정</b>이 즉시 정밀 분석되어 우측 퀴즈와 동기화됩니다.
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.92rem; color: #166534;">
+                🟢 <b>실시간 30fps 라이브 스트리밍 거울</b><br>
+                아래 <b>[START]</b> 버튼을 누르면 카메라가 켜지며 얼굴 랜드마크 선과 표정 지표가 <b>실시간으로 계속 움직이며 연속 측정</b>됩니다. (사진을 매번 찍을 필요 없음!)
             </div>
             """, unsafe_allow_html=True)
 
-            camera_img = st.camera_input("📷 내 얼굴 촬영하여 즉시 진단", key="cloud_browser_camera")
+            if HAS_WEBRTC:
+                webrtc_ctx = webrtc_streamer(
+                    key="live-face-mirror-stream",
+                    mode=WebRtcMode.SENDRECV,
+                    rtc_configuration=RTCConfiguration({
+                        "iceServers": [
+                            {"urls": ["stun:stun.l.google.com:19302"]},
+                            {"urls": ["stun:stun1.l.google.com:19302"]}
+                        ]
+                    }),
+                    video_processor_factory=RealtimeFaceProcessor,
+                    media_stream_constraints={"video": {"width": {"ideal": 640}, "height": {"ideal": 480}}, "audio": False},
+                    async_processing=True
+                )
+                if webrtc_ctx.video_processor and webrtc_ctx.video_processor.last_analysis:
+                    latest = webrtc_ctx.video_processor.last_analysis
+                    st.session_state['latest_analysis'] = latest
+                    db.add_record(
+                        dominant_emotion=latest['dominant'],
+                        emotion_ko=latest['dominant_ko'],
+                        confidence=latest['confidence'],
+                        scores=latest['scores'],
+                        care_message=latest['care_message']
+                    )
+            else:
+                st.info("💡 실시간 스트리밍 모듈 준비 중입니다. 옆의 [📷 간편 사진 촬영] 탭을 이용해 주세요.")
+
+        # ── 2. 스마트폰/웹 브라우저 간편 사진 촬영 모드 ──
+        with tab_snap:
+            st.markdown("""
+            <div style="background: #f1f5f9; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.92rem; color: #334155;">
+                ✨ 카메라로 얼굴 사진을 찍거나 업로드하여 <b>1초 만에 정밀 진단</b>합니다.
+            </div>
+            """, unsafe_allow_html=True)
+
+            camera_img = st.camera_input("📷 얼굴 사진 촬영하여 즉시 진단", key="cloud_browser_camera")
 
             with st.expander("📁 또는 기존 얼굴 사진 파일 업로드"):
                 uploaded_file = st.file_uploader("얼굴 사진 선택 (JPG, PNG)", type=["jpg", "jpeg", "png"], key="upload_face")
@@ -190,21 +256,25 @@ def main():
                 st.markdown("""
                 <div style="
                     background-color: #0f172a; border: 2px dashed #334155;
-                    border-radius: 14px; min-height: 240px;
+                    border-radius: 14px; min-height: 220px;
                     display: flex; flex-direction: column; justify-content: center;
-                    align-items: center; color: #94a3b8; text-align: center; padding: 24px;">
-                    <div style="font-size: 3.2rem; margin-bottom: 10px;">🤳</div>
-                    <div style="font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px;">스마트폰/웹 카메라 준비 완료</div>
-                    <div style="font-size: 0.95rem; color: #94a3b8; line-height: 1.5;">
-                        위의 <b>[사진 촬영]</b> 버튼을 누르시면<br>
-                        접속 중인 스마트폰/PC의 카메라로 즉시 생체신호가 측정됩니다.
+                    align-items: center; color: #94a3b8; text-align: center; padding: 20px;">
+                    <div style="font-size: 3.0rem; margin-bottom: 8px;">🤳</div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px;">스마트폰/웹 카메라 준비 완료</div>
+                    <div style="font-size: 0.92rem; color: #94a3b8; line-height: 1.4;">
+                        위의 <b>[사진 촬영]</b> 버튼을 누르시면 즉시 진단이 수행됩니다.
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-        # ── 2. 로컬 PC 웹캠 실시간 연속 스트리밍 모드 ──
+        # ── 3. 로컬 PC 웹캠 실시간 연속 스트리밍 모드 ──
         with tab_local:
-            st.caption("※ 내 노트북에서 직접 실행할 때 30fps 연속 실시간 스트리밍을 제공합니다.")
+            st.markdown("""
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 0.90rem; color: #92400e;">
+                ⚠️ <b>로컬 전용 모드 안내</b>: 이 탭은 내 컴퓨터에서 <code>실시간_표정거울_실행.bat</code>을 직접 실행했을 때 로컬 웹캠을 직접 열어줍니다.<br>
+                인터넷(클라우드) 브라우저로 접속 중일 때는 첫 번째 <b>[🎥 실시간 라이브 영상]</b> 탭의 START 버튼을 눌러주세요!
+            </div>
+            """, unsafe_allow_html=True)
             camera_on = st.toggle("로컬 웹캠 실시간 연속 스트리밍 시작", value=False, key="local_cam_toggle",
                                   help="스위치를 켜면 웹캠의 안면 랜드마크 선과 입술·눈가 미세 표정, 음성 활력도가 실시간 측정됩니다.")
 

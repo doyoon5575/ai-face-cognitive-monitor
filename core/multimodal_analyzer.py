@@ -37,89 +37,85 @@ def clean_korean_text(text: str) -> str:
     return cleaned
 
 
-# 7대 감정 범용 설정 (아동, 성인, 시니어 누구나 공감하는 표준 안내 멘트)
+# 7대 감정 범용 설정 (아동, 성인, 시니어 누구나 공감하는 표준 웰니스 안내 멘트)
 EMOTION_CONFIG = {
     'happy': {
-        'ko': '활짝 웃음 (기쁨)',
-        'short': '기쁨/웃음',
+        'ko': '미소 / 활력 양호',
+        'short': '미소/활력',
         'color_rgb': (46, 204, 113),
         'color_bgr': (113, 204, 46),
         'weather': '맑음',
         'messages': [
             "밝고 활기찬 미소가 참 보기 좋습니다!",
-            "긍정적인 에너지가 가득한 상태입니다. 좋은 하루 보내세요!",
+            "긍정적인 에너지가 가득한 상태입니다.",
             "기분 좋은 미소 덕분에 주변까지 밝아집니다."
         ]
     },
     'neutral': {
-        'ko': '편안하고 평온함',
-        'short': '평온/편안',
+        'ko': '편안하고 차분함',
+        'short': '평온/안정',
         'color_rgb': (52, 152, 219),
         'color_bgr': (219, 152, 52),
         'weather': '화창',
         'messages': [
-            "마음이 편안하고 차분하게 안정되어 있습니다.",
-            "차분한 집중과 여유로운 컨디션을 유지하고 계십니다.",
+            "차분한 집중과 편안한 컨디션을 유지하고 계십니다.",
+            "마음이 안정되고 평온한 상태입니다.",
             "오늘도 평온하고 안정된 하루를 이어가 보세요."
         ]
     },
     'surprise': {
-        'ko': '깜짝 놀람 (호기심)',
-        'short': '놀람/호기심',
+        'ko': '호기심 / 각성 상태',
+        'short': '각성/호기심',
         'color_rgb': (241, 196, 15),
         'color_bgr': (15, 196, 241),
         'weather': '무지개',
         'messages': [
-            "호기심과 흥미가 높아진 활기찬 상태입니다!",
-            "새로운 자극이나 소식에 주의가 집중되고 있습니다.",
-            "흥미진진하고 활력 넘치는 순간입니다."
+            "새로운 자극이나 문제에 집중하고 계십니다.",
+            "주의 집중도가 높아진 활기찬 순간입니다."
         ]
     },
     'sad': {
-        'ko': '마음이 울적함 (슬픔)',
-        'short': '슬픔/울적',
+        'ko': '차분함 / 피로 휴식 권장',
+        'short': '차분/피로',
         'color_rgb': (155, 89, 182),
         'color_bgr': (182, 89, 155),
         'weather': '비',
         'messages': [
-            "마음이 조금 가라앉아 있거나 지쳐 보입니다.",
-            "따뜻한 음료 한 잔과 함께 편안한 휴식을 권해드립니다.",
-            "잠시 눈을 쉬게 하고 좋아하는 음악을 감상해 보세요."
+            "컨디션이 조금 가라앉아 보입니다. 편안하게 호흡해 보세요.",
+            "따뜻한 음료 한 잔과 함께 가벼운 휴식을 권해드립니다."
         ]
     },
     'angry': {
-        'ko': '마음이 답답함 (긴장)',
-        'short': '화남/답답',
+        'ko': '주의 집중 / 긴장 상태',
+        'short': '집중/긴장',
         'color_rgb': (231, 76, 60),
         'color_bgr': (60, 76, 231),
         'weather': '천둥',
         'messages': [
-            "스트레스나 긴장이 다소 높아진 상태입니다.",
-            "천천히 숨을 깊게 세 번 들이쉬고 내쉬어보세요.",
-            "잠시 어깨 힘을 빼고 가벼운 스트레칭을 해보세요."
+            "문제에 깊이 집중하거나 다소 긴장된 상태입니다.",
+            "천천히 숨을 깊게 들이쉬고 어깨 힘을 살짝 빼보세요.",
+            "편안한 마음으로 한 걸음씩 여유를 가져보세요."
         ]
     },
     'fear': {
-        'ko': '긴장되고 불안함',
-        'short': '불안/긴장',
+        'ko': '신중함 / 주의 깊음',
+        'short': '신중/긴장',
         'color_rgb': (230, 126, 34),
         'color_bgr': (34, 126, 230),
         'weather': '안개',
         'messages': [
-            "주변 환경이나 문제에 긴장감이 감지되었습니다.",
-            "편안한 호흡을 유지하시고 마음의 여유를 가져보세요.",
-            "스스로를 믿고 편안하게 한 걸음씩 진행해 보세요."
+            "매우 신중하고 조심스럽게 상황을 살피고 계십니다.",
+            "자신감을 가지고 편안하게 진행해 보세요."
         ]
     },
     'disgust': {
-        'ko': '불편함/언짢음',
-        'short': '불편',
+        'ko': '자세 피로 / 스트레칭 권장',
+        'short': '피로/스트레칭',
         'color_rgb': (149, 165, 166),
         'color_bgr': (166, 165, 149),
         'weather': '흐림',
         'messages': [
-            "몸이나 마음에 불편한 자극이 느껴지는 상태입니다.",
-            "자세를 바르게 고쳐 앉거나 창문을 열어 환기해 보세요.",
+            "목이나 어깨에 피로가 감지될 수 있습니다.",
             "가벼운 기지개를 켜며 컨디션을 전환해 보세요."
         ]
     }
@@ -402,14 +398,15 @@ class MultimodalAffectAnalyzer:
         pil_img = Image.fromarray(rgb_frame)
         draw = ImageDraw.Draw(pil_img, "RGBA")
 
-        # 상단 헤더 바 (높이 84px)
-        draw.rectangle([(0, 0), (w, 84)], fill=(18, 22, 32, 225))
-        draw.rectangle([(0, 82), (w, 85)], fill=accent_color_rgb)
+        # 상단 헤더 바 (높이 44px, 슬림 다크 바)
+        header_h = 44
+        draw.rectangle([(0, 0), (w, header_h)], fill=(15, 20, 30, 215))
+        draw.rectangle([(0, header_h - 2), (w, header_h)], fill=accent_color_rgb)
 
-        font_large = self.get_font(30)
-        font_sub = self.get_font(18)
-        font_msg = self.get_font(20)
-        font_small = self.get_font(14)
+        font_header = self.get_font(16)
+        font_sub = self.get_font(12)
+        font_msg = self.get_font(13)
+        font_small = self.get_font(12)
 
         if analysis:
             dom_ko = clean_korean_text(analysis['dominant_ko'])
@@ -417,52 +414,49 @@ class MultimodalAffectAnalyzer:
             weather_ko = clean_korean_text(analysis['weather'])
             symmetry = analysis.get('symmetry', 95.0)
 
-            # 상단 제목 (네모 글리프 완전 없음)
-            header_text = f"[현재 상태]  {dom_ko}"
-            draw.text((22, 12), header_text, font=font_large, fill=(255, 255, 255))
+            # 상단 제목 (깔끔한 슬림 1줄 텍스트)
+            header_text = f"상태: {dom_ko}   |   일치도: {conf:.0f}%   |   안면 대칭: {symmetry:.0f}%   |   컨디션: {weather_ko}"
+            draw.text((16, 12), header_text, font=font_header, fill=(255, 255, 255))
 
-            sub_text = f"일치도: {conf:.0f}%  |  컨디션 날씨: {weather_ko}  |  안면 대칭도: {symmetry:.0f}%"
-            draw.text((24, 52), sub_text, font=font_sub, fill=(215, 230, 250))
-
-            # 3. 우측 표정 세부 분석 카드 (너비 265px)
+            # 3. 우측 표정 세부 분석 카드 (컴팩트: 너비 190px, 높이 88px)
             scores = analysis.get('scores', {})
             sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:3]
 
-            card_w = 265
-            card_h = 130
-            card_x = w - card_w - 18
-            card_y = 94
+            card_w = 190
+            card_h = 88
+            card_x = w - card_w - 12
+            card_y = header_h + 8
 
             draw.rectangle([(card_x, card_y), (card_x + card_w, card_y + card_h)],
-                           fill=(18, 24, 36, 215), outline=(75, 85, 105), width=1)
-            draw.text((card_x + 14, card_y + 9), "표정 세부 분석", font=self.get_font(16), fill=(230, 235, 245))
+                           fill=(18, 24, 36, 195), outline=(75, 85, 105), width=1)
+            draw.text((card_x + 10, card_y + 6), "표정 세부 분석", font=font_sub, fill=(215, 225, 240))
 
-            row_y = card_y + 36
+            row_y = card_y + 26
             for emo_key, score_val in sorted_scores:
                 cfg_item = EMOTION_CONFIG.get(emo_key, {})
                 short_name = cfg_item.get('short', emo_key)
                 emo_color = cfg_item.get('color_rgb', (200, 200, 200))
 
-                draw.text((card_x + 14, row_y), short_name, font=font_small, fill=(240, 240, 240))
+                draw.text((card_x + 10, row_y), short_name, font=font_small, fill=(230, 230, 230))
 
-                bar_x1 = card_x + 88
-                bar_x2 = bar_x1 + 115
-                draw.rectangle([(bar_x1, row_y + 4), (bar_x2, row_y + 14)], fill=(45, 55, 70))
-                fill_w = int(115 * (max(0.0, min(100.0, score_val)) / 100.0))
+                bar_x1 = card_x + 75
+                bar_x2 = bar_x1 + 65
+                draw.rectangle([(bar_x1, row_y + 3), (bar_x2, row_y + 11)], fill=(45, 55, 70))
+                fill_w = int(65 * (max(0.0, min(100.0, score_val)) / 100.0))
                 if fill_w > 0:
-                    draw.rectangle([(bar_x1, row_y + 4), (bar_x1 + fill_w, row_y + 14)], fill=emo_color)
+                    draw.rectangle([(bar_x1, row_y + 3), (bar_x1 + fill_w, row_y + 11)], fill=emo_color)
 
-                draw.text((bar_x2 + 8, row_y), f"{score_val:.0f}%", font=font_small, fill=(210, 225, 240))
-                row_y += 27
+                draw.text((bar_x2 + 6, row_y), f"{score_val:.0f}%", font=font_small, fill=(200, 215, 230))
+                row_y += 19
 
-            # 4. 좌측 상단: 미세 바이오마커 & 마이크 음성 활력 게이지 카드
-            bio_w = 230
-            bio_h = 104
-            bio_x = 18
-            bio_y = 94
+            # 4. 좌측 상단: 미세 바이오마커 & 마이크 음성 활력 게이지 카드 (너비 180px, 높이 88px)
+            bio_w = 180
+            bio_h = 88
+            bio_x = 12
+            bio_y = header_h + 8
             draw.rectangle([(bio_x, bio_y), (bio_x + bio_w, bio_y + bio_h)],
-                           fill=(18, 24, 36, 215), outline=(75, 85, 105), width=1)
-            draw.text((bio_x + 12, bio_y + 8), "미세 생체신호 분석", font=self.get_font(15), fill=(210, 230, 255))
+                           fill=(18, 24, 36, 195), outline=(75, 85, 105), width=1)
+            draw.text((bio_x + 10, bio_y + 6), "미세 생체신호 분석", font=font_sub, fill=(200, 220, 245))
 
             mouth_d = analysis.get('mouth_dynamic', 30.0)
             eye_f = analysis.get('eye_fatigue', 20.0)
@@ -470,38 +464,37 @@ class MultimodalAffectAnalyzer:
             vol = audio_info.get('volume', 0.0)
 
             # 입술 반응도 바
-            draw.text((bio_x + 12, bio_y + 32), "입술 활력", font=self.get_font(13), fill=(220, 220, 220))
-            draw.rectangle([(bio_x + 72, bio_y + 36), (bio_x + 172, bio_y + 44)], fill=(45, 55, 70))
-            draw.rectangle([(bio_x + 72, bio_y + 36), (bio_x + 72 + int(100 * (mouth_d / 100.0)), bio_y + 44)], fill=(46, 204, 113))
-            draw.text((bio_x + 180, bio_y + 32), f"{mouth_d:.0f}%", font=self.get_font(12), fill=(200, 210, 220))
+            draw.text((bio_x + 10, bio_y + 26), "입술 활력", font=font_small, fill=(210, 210, 210))
+            draw.rectangle([(bio_x + 65, bio_y + 29), (bio_x + 135, bio_y + 37)], fill=(45, 55, 70))
+            draw.rectangle([(bio_x + 65, bio_y + 29), (bio_x + 65 + int(70 * (mouth_d / 100.0)), bio_y + 37)], fill=(46, 204, 113))
+            draw.text((bio_x + 140, bio_y + 26), f"{mouth_d:.0f}%", font=font_small, fill=(190, 205, 220))
 
             # 눈가 피로도 바
-            draw.text((bio_x + 12, bio_y + 53), "눈가 피로", font=self.get_font(13), fill=(220, 220, 220))
-            draw.rectangle([(bio_x + 72, bio_y + 57), (bio_x + 172, bio_y + 65)], fill=(45, 55, 70))
-            draw.rectangle([(bio_x + 72, bio_y + 57), (bio_x + 72 + int(100 * (eye_f / 100.0)), bio_y + 65)], fill=(231, 76, 60))
-            draw.text((bio_x + 180, bio_y + 53), f"{eye_f:.0f}%", font=self.get_font(12), fill=(200, 210, 220))
+            draw.text((bio_x + 10, bio_y + 45), "눈가 피로", font=font_small, fill=(210, 210, 210))
+            draw.rectangle([(bio_x + 65, bio_y + 48), (bio_x + 135, bio_y + 56)], fill=(45, 55, 70))
+            draw.rectangle([(bio_x + 65, bio_y + 48), (bio_x + 65 + int(70 * (eye_f / 100.0)), bio_y + 56)], fill=(231, 76, 60))
+            draw.text((bio_x + 140, bio_y + 45), f"{eye_f:.0f}%", font=font_small, fill=(190, 205, 220))
 
             # 마이크 음성 성량 바
-            draw.text((bio_x + 12, bio_y + 74), "음성 성량", font=self.get_font(13), fill=(220, 220, 220))
-            draw.rectangle([(bio_x + 72, bio_y + 78), (bio_x + 172, bio_y + 86)], fill=(45, 55, 70))
-            mic_fill = int(100 * (min(100.0, vol) / 100.0))
+            draw.text((bio_x + 10, bio_y + 64), "음성 성량", font=font_small, fill=(210, 210, 210))
+            draw.rectangle([(bio_x + 65, bio_y + 67), (bio_x + 135, bio_y + 75)], fill=(45, 55, 70))
+            mic_fill = int(70 * (min(100.0, vol) / 100.0))
             mic_color = (46, 204, 113) if vol > 12.0 else (100, 110, 130)
             if mic_fill > 0:
-                draw.rectangle([(bio_x + 72, bio_y + 78), (bio_x + 72 + mic_fill, bio_y + 86)], fill=mic_color)
-            mic_label = "발화중" if vol > 12.0 else "대기"
-            draw.text((bio_x + 180, bio_y + 74), mic_label, font=self.get_font(12), fill=(180, 230, 200) if vol > 12.0 else (160, 170, 180))
-
+                draw.rectangle([(bio_x + 65, bio_y + 67), (bio_x + 65 + mic_fill, bio_y + 75)], fill=mic_color)
+            mic_label = "발화" if vol > 12.0 else "대기"
+            draw.text((bio_x + 140, bio_y + 64), mic_label, font=font_small, fill=(170, 220, 190) if vol > 12.0 else (150, 160, 170))
 
             care_msg = clean_korean_text(analysis.get('care_message', ""))
         else:
-            draw.text((22, 22), "생체신호 탐색 중입니다...", font=font_large, fill=(240, 240, 240))
-            care_msg = "카메라와 마이크를 향해 편안하게 응답해 주세요."
+            draw.text((16, 12), "생체신호 탐색 중입니다...", font=font_header, fill=(230, 230, 230))
+            care_msg = "카메라를 정면으로 바라보며 편안하게 응답해 주세요."
 
-        # 5. 하단 안내 배너 (높이 74px)
-        banner_h = 74
-        draw.rectangle([(0, h - banner_h), (w, h)], fill=(14, 18, 28, 235))
-        draw.rectangle([(0, h - banner_h), (w, h - banner_h + 3)], fill=accent_color_rgb)
-        draw.text((22, h - banner_h + 23), care_msg, font=font_msg, fill=(255, 255, 240))
+        # 5. 하단 안내 배너 (높이 38px, 슬림 바)
+        banner_h = 38
+        draw.rectangle([(0, h - banner_h), (w, h)], fill=(14, 18, 28, 220))
+        draw.rectangle([(0, h - banner_h), (w, h - banner_h + 2)], fill=accent_color_rgb)
+        draw.text((16, h - banner_h + 10), care_msg, font=font_msg, fill=(255, 255, 240))
 
         out_frame = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
         return out_frame

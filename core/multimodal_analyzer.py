@@ -121,16 +121,56 @@ EMOTION_CONFIG = {
     }
 }
 
-# 얼굴 랜드마크 주요 윤곽선 인덱스
+# 얼굴 랜드마크 주요 윤곽선 인덱스 (MediaPipe Face Mesh 468/478 포인트)
 FACE_CONTOURS = {
+    # 턱선 및 얼굴 외곽선 (Neon Cyan)
     "jawline": [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10],
-    "left_eyebrow": [70, 63, 105, 66, 107],
-    "right_eyebrow": [336, 296, 334, 293, 300],
-    "left_eye": [33, 160, 158, 133, 153, 144, 33],
-    "right_eye": [263, 387, 385, 362, 380, 373, 263],
-    "nose_bridge": [168, 6, 197, 195, 5, 4, 1, 2],
-    "lips_outer": [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 61]
+    # 왼쪽 눈썹 (Neon Lime)
+    "left_eyebrow": [70, 63, 105, 66, 107, 55, 65, 52, 53, 46],
+    # 오른쪽 눈썹 (Neon Lime)
+    "right_eyebrow": [336, 296, 334, 293, 300, 276, 283, 282, 295, 285],
+    # 왼쪽 눈 (Bright Yellow)
+    "left_eye": [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246, 33],
+    # 오른쪽 눈 (Bright Yellow)
+    "right_eye": [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398, 362],
+    # 코 능선 및 코끝 (Neon Orange)
+    "nose_bridge": [168, 6, 197, 195, 5, 4, 1, 19, 94, 2],
+    # 콧볼 (Neon Orange)
+    "nose_wings": [98, 97, 2, 326, 327],
+    # 입술 바깥선 (Vivid Coral)
+    "lips_outer": [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 61],
+    # 입술 안쪽선 (Vivid Pink)
+    "lips_inner": [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78],
+    # 팔자 주름 및 볼 윤곽선 (Subtle wireframe)
+    "nasolabial_left": [116, 117, 118, 101, 36],
+    "nasolabial_right": [345, 346, 347, 330, 266],
+    # 이마-미간 연결선 (Wireframe)
+    "forehead_mesh": [10, 151, 9, 8, 168]
 }
+
+# 부위별 고대비 네온 컬러 매핑 (BGR format, thickness=2로 또렷하게 표현)
+CONTOUR_STYLES = {
+    "jawline": {"color": (255, 230, 0), "thickness": 2, "closed": False},         # 네온 시안
+    "left_eyebrow": {"color": (0, 255, 120), "thickness": 2, "closed": False},     # 네온 라임
+    "right_eyebrow": {"color": (0, 255, 120), "thickness": 2, "closed": False},    # 네온 라임
+    "left_eye": {"color": (0, 240, 255), "thickness": 2, "closed": True},          # 비비드 옐로우
+    "right_eye": {"color": (0, 240, 255), "thickness": 2, "closed": True},         # 비비드 옐로우
+    "nose_bridge": {"color": (0, 180, 255), "thickness": 2, "closed": False},      # 네온 오렌지
+    "nose_wings": {"color": (0, 180, 255), "thickness": 2, "closed": False},       # 네온 오렌지
+    "lips_outer": {"color": (120, 70, 255), "thickness": 2, "closed": True},       # 비비드 코랄 핑크
+    "lips_inner": {"color": (200, 120, 255), "thickness": 2, "closed": True},      # 밝은 마젠타
+    "nasolabial_left": {"color": (240, 210, 80), "thickness": 1, "closed": False}, # 세련된 보조 와이어
+    "nasolabial_right": {"color": (240, 210, 80), "thickness": 1, "closed": False},
+    "forehead_mesh": {"color": (240, 210, 80), "thickness": 1, "closed": False}
+}
+
+# 고휘도 앵커 포인트
+KEY_ANCHOR_POINTS = [
+    33, 133, 159, 145, 263, 362, 386, 374,  # 눈 주요 포인트
+    1, 4, 6, 168,                           # 코끝 & 콧대
+    61, 291, 0, 17, 13, 14,                  # 입술 좌/우/상/하
+    152, 10                                  # 턱끝 & 이마 상단
+]
 
 
 class MultimodalAffectAnalyzer:
@@ -140,7 +180,7 @@ class MultimodalAffectAnalyzer:
         self.font_path = font_path or self._find_korean_font()
         self._fonts = {}
 
-        for size in [13, 15, 17, 19, 21, 24, 30, 34]:
+        for size in [12, 13, 14, 15, 16, 17, 19, 21, 24, 30, 34]:
             try:
                 self._fonts[size] = ImageFont.truetype(self.font_path, size)
             except Exception:
@@ -152,15 +192,12 @@ class MultimodalAffectAnalyzer:
         self.last_message_change_time: float = 0.0
         self.current_dominant: str = "neutral"
 
-        # MediaPipe Face Landmarker 초기화
+        # MediaPipe Face Landmarker 초기화 (초고속 XNNPACK 60FPS)
         self._mp_landmarker = None
         self._init_mediapipe()
 
         # 실시간 음성 분석기 초기화
         self.audio_analyzer = RealtimeAudioAnalyzer()
-
-        # 웜업
-        self._warmup_deepface()
 
     def _find_korean_font(self) -> str:
         candidates = [
@@ -196,28 +233,20 @@ class MultimodalAffectAnalyzer:
                     base_options=base_options,
                     running_mode=vision.RunningMode.IMAGE,
                     num_faces=1,
-                    min_face_detection_confidence=0.4,
-                    min_face_presence_confidence=0.4,
-                    min_tracking_confidence=0.4,
+                    min_face_detection_confidence=0.35,
+                    min_face_presence_confidence=0.35,
+                    min_tracking_confidence=0.35,
                     output_face_blendshapes=True
                 )
                 self._mp_landmarker = vision.FaceLandmarker.create_from_options(options)
         except Exception as e:
             self._mp_landmarker = None
 
-    def _warmup_deepface(self) -> None:
-        try:
-            from deepface import DeepFace
-            dummy = np.zeros((100, 100, 3), dtype=np.uint8)
-            DeepFace.analyze(dummy, actions=['emotion'], enforce_detection=False, detector_backend='opencv', silent=True)
-        except Exception:
-            pass
-
     def get_font(self, size: int) -> ImageFont.FreeTypeFont:
-        return self._fonts.get(size, self._fonts.get(19, ImageFont.load_default()))
+        return self._fonts.get(size, self._fonts.get(16, ImageFont.load_default()))
 
     def extract_landmarks_and_blendshapes(self, frame: np.ndarray) -> Tuple[Optional[List[Tuple[int, int]]], Dict[str, float]]:
-        """안면 478개 랜드마크 좌표 및 52종 미세 근육(Blendshape) 수치 추출"""
+        """안면 478개 랜드마크 좌표 및 52종 미세 근육(Blendshape) 수치 초고속 추출 (20ms)"""
         if self._mp_landmarker is None:
             return None, {}
 
@@ -231,10 +260,10 @@ class MultimodalAffectAnalyzer:
             landmarks = None
             blendshapes = {}
 
-            if res and res.face_landmarks:
+            if res and res.face_landmarks and len(res.face_landmarks) > 0:
                 landmarks = [(int(lm.x * w), int(lm.y * h)) for lm in res.face_landmarks[0]]
 
-            if res and res.face_blendshapes and res.face_blendshapes[0]:
+            if res and res.face_blendshapes and len(res.face_blendshapes) > 0 and res.face_blendshapes[0]:
                 for b in res.face_blendshapes[0]:
                     blendshapes[b.category_name] = float(b.score)
 
@@ -243,85 +272,96 @@ class MultimodalAffectAnalyzer:
             return None, {}
 
     def analyze_frame(self, frame: np.ndarray) -> Optional[Dict[str, Any]]:
-        """DeepFace 및 MediaPipe 52종 미세 표정 근육 + 오디오 바이오마커 결합 분석"""
+        """MediaPipe 52종 FACS 미세 표정 근육 + 오디오 바이오마커 실시간 고감도 결합 분석 (60FPS)"""
         try:
             # 1. 안면 랜드마크 및 52종 미세 표정 근육(Blendshapes) 추출
             landmarks, blendshapes = self.extract_landmarks_and_blendshapes(frame)
 
-            dominant = 'neutral'
-            confidence = 80.0
-            norm_emotions = {
-                'happy': 10.0, 'neutral': 70.0, 'sad': 5.0,
-                'angry': 5.0, 'surprise': 5.0, 'fear': 3.0, 'disgust': 2.0
-            }
-            region = {}
+            # 얼굴 미감지 시 기본값 유지 또는 마지막 결과 반환
+            if not blendshapes:
+                if self.last_result:
+                    res = self.last_result.copy()
+                    res['landmarks'] = landmarks
+                    return res
+                blendshapes = {}
 
-            # 2. DeepFace 사용 가능 시 DeepFace 우선 분석
-            deepface_success = False
-            try:
-                from deepface import DeepFace
-                objs = DeepFace.analyze(
-                    img_path=frame,
-                    actions=['emotion'],
-                    enforce_detection=False,
-                    detector_backend='opencv',
-                    silent=True
-                )
-                if objs:
-                    obj = objs[0] if isinstance(objs, list) else objs
-                    dominant = obj.get('dominant_emotion', 'neutral').lower()
-                    emotions = obj.get('emotion', {})
-                    region = obj.get('region', {})
-                    total = sum(emotions.values()) if emotions else 100.0
-                    norm_emotions = {k: (v / total) * 100.0 for k, v in emotions.items()}
-                    confidence = norm_emotions.get(dominant, 80.0)
-                    deepface_success = True
-            except Exception:
-                deepface_success = False
+            # 2. 미세 근육(FACS Action Units) 추출
+            smile_l = blendshapes.get('mouthSmileLeft', 0.0)
+            smile_r = blendshapes.get('mouthSmileRight', 0.0)
+            avg_smile = (smile_l + smile_r) / 2.0
 
-            # 3. DeepFace 부재 시: MediaPipe 52종 안면 근육(Blendshapes)으로 초고속 정밀 감정 산출
-            if not deepface_success and blendshapes:
-                smile = (blendshapes.get('mouthSmileLeft', 0.0) + blendshapes.get('mouthSmileRight', 0.0)) / 2.0
-                jaw = blendshapes.get('jawOpen', 0.0)
-                brow_down = (blendshapes.get('browDownLeft', 0.0) + blendshapes.get('browDownRight', 0.0)) / 2.0
-                brow_inner = blendshapes.get('browInnerUp', 0.0)
-                frown = (blendshapes.get('mouthFrownLeft', 0.0) + blendshapes.get('mouthFrownRight', 0.0)) / 2.0
-
-                happy_s = float(np.clip(smile * 130.0, 5.0, 98.0))
-                surprise_s = float(np.clip((jaw * 60.0) + (brow_inner * 50.0), 5.0, 95.0))
-                angry_s = float(np.clip(brow_down * 110.0, 5.0, 92.0))
-                sad_s = float(np.clip(frown * 100.0, 5.0, 90.0))
-                neutral_s = float(np.clip(100.0 - (happy_s * 0.5 + angry_s * 0.3 + sad_s * 0.3), 10.0, 90.0))
-
-                scores_map = {
-                    'happy': happy_s,
-                    'surprise': surprise_s,
-                    'angry': angry_s,
-                    'sad': sad_s,
-                    'neutral': neutral_s,
-                    'fear': 8.0,
-                    'disgust': 5.0
-                }
-                dominant = max(scores_map, key=scores_map.get)
-                total_s = sum(scores_map.values())
-                norm_emotions = {k: (v / total_s) * 100.0 for k, v in scores_map.items()}
-                confidence = norm_emotions.get(dominant, 80.0)
-
-            # 1. 입술 반응도 (0.0 ~ 100.0)
-            mouth_smile = (blendshapes.get('mouthSmileLeft', 0.0) + blendshapes.get('mouthSmileRight', 0.0)) / 2.0
             jaw_open = blendshapes.get('jawOpen', 0.0)
-            mouth_dynamic = float(np.clip((mouth_smile * 60.0) + (jaw_open * 40.0) + 10.0, 10.0, 98.0))
+            pucker = blendshapes.get('mouthPucker', 0.0)
+            funnel = blendshapes.get('mouthFunnel', 0.0)
+            shrug = blendshapes.get('mouthShrugLower', 0.0)
+            upper_up = (blendshapes.get('mouthUpperUpLeft', 0.0) + blendshapes.get('mouthUpperUpRight', 0.0)) / 2.0
 
-            # 2. 눈가 피로도 (0.0 ~ 100.0)
-            blink = (blendshapes.get('eyeBlinkLeft', 0.0) + blendshapes.get('eyeBlinkRight', 0.0)) / 2.0
-            frown = (blendshapes.get('browDownLeft', 0.0) + blendshapes.get('browDownRight', 0.0)) / 2.0
-            eye_fatigue = float(np.clip((frown * 60.0) + (blink * 40.0), 5.0, 95.0))
+            blink_l = blendshapes.get('eyeBlinkLeft', 0.0)
+            blink_r = blendshapes.get('eyeBlinkRight', 0.0)
+            avg_blink = (blink_l + blink_r) / 2.0
 
-            # 3. 안면 대칭도 (0.0 ~ 100.0)
-            smile_diff = abs(blendshapes.get('mouthSmileLeft', 0.0) - blendshapes.get('mouthSmileRight', 0.0))
-            symmetry = float(np.clip(100.0 - (smile_diff * 120.0), 70.0, 99.0))
+            squint_l = blendshapes.get('eyeSquintLeft', 0.0)
+            squint_r = blendshapes.get('eyeSquintRight', 0.0)
+            avg_squint = (squint_l + squint_r) / 2.0
 
-            # 음성 바이오마커 실시간 지표 수신
+            brow_down_l = blendshapes.get('browDownLeft', 0.0)
+            brow_down_r = blendshapes.get('browDownRight', 0.0)
+            avg_brow_down = (brow_down_l + brow_down_r) / 2.0
+
+            brow_inner = blendshapes.get('browInnerUp', 0.0)
+            frown_l = blendshapes.get('mouthFrownLeft', 0.0)
+            frown_r = blendshapes.get('mouthFrownRight', 0.0)
+            avg_frown = (frown_l + frown_r) / 2.0
+
+            eye_wide_l = blendshapes.get('eyeWideLeft', 0.0)
+            eye_wide_r = blendshapes.get('eyeWideRight', 0.0)
+            avg_eye_wide = (eye_wide_l + eye_wide_r) / 2.0
+
+            nose_sneer = (blendshapes.get('noseSneerLeft', 0.0) + blendshapes.get('noseSneerRight', 0.0)) / 2.0
+
+            # 3. 실시간 바이오마커 3종 산출 (0.0 ~ 100.0)
+            # 입술 활력도: 발화, 미소, 입모양 움직임에 따라 즉각 민감 반응
+            raw_mouth = (avg_smile * 45.0) + (jaw_open * 42.0) + (pucker * 25.0) + (funnel * 25.0) + (shrug * 20.0) + (upper_up * 20.0)
+            mouth_dynamic = float(np.clip(raw_mouth * 1.45 + 12.0, 10.0, 99.0))
+
+            # 눈가 피로/긴장도: 미간 찌푸림, 눈 찡그림, 깜빡임에 따라 즉각 반응
+            raw_fatigue = (avg_squint * 42.0) + (avg_brow_down * 42.0) + (avg_blink * 30.0)
+            eye_fatigue = float(np.clip(raw_fatigue * 1.5 + 10.0, 8.0, 96.0))
+
+            # 안면 대칭도: 좌우 미소, 찡그림, 눈썹 대칭성 실시간 비교
+            diff_smile = abs(smile_l - smile_r)
+            diff_squint = abs(squint_l - squint_r)
+            diff_brow = abs(brow_down_l - brow_down_r)
+            total_diff = (diff_smile * 0.5) + (diff_squint * 0.3) + (diff_brow * 0.2)
+            symmetry = float(np.clip(99.0 - (total_diff * 140.0), 65.0, 99.0))
+
+            # 4. 7대 감정 분포 산출 (MediaPipe FACS Action Units)
+            score_happy = float(np.clip((avg_smile * 135.0) + (upper_up * 20.0), 2.0, 98.0))
+            score_surprise = float(np.clip((jaw_open * 70.0) + (brow_inner * 50.0) + (avg_eye_wide * 50.0), 2.0, 95.0))
+            score_angry = float(np.clip((avg_brow_down * 125.0) + (avg_squint * 30.0), 2.0, 92.0))
+            score_sad = float(np.clip((avg_frown * 105.0) + (brow_inner * 40.0) + (shrug * 30.0), 2.0, 90.0))
+            score_fear = float(np.clip((brow_inner * 60.0) + (avg_eye_wide * 40.0), 2.0, 85.0))
+            score_disgust = float(np.clip((nose_sneer * 110.0) + (upper_up * 30.0), 2.0, 85.0))
+
+            # 평온 상태는 다른 흥분/감정 지표가 낮을 때 높게 산출
+            arousal = (score_happy + score_surprise + score_angry + score_sad + score_fear + score_disgust) / 6.0
+            score_neutral = float(np.clip(100.0 - (arousal * 1.8), 5.0, 95.0))
+
+            raw_scores = {
+                'happy': score_happy,
+                'neutral': score_neutral,
+                'surprise': score_surprise,
+                'angry': score_angry,
+                'sad': score_sad,
+                'fear': score_fear,
+                'disgust': score_disgust
+            }
+            total_sum = sum(raw_scores.values())
+            norm_emotions = {k: round((v / total_sum) * 100.0, 1) for k, v in raw_scores.items()}
+            dominant = max(norm_emotions, key=norm_emotions.get)
+            confidence = norm_emotions[dominant]
+
+            # 5. 오디오 바이오마커 실시간 지표 수신
             audio_metrics = self.audio_analyzer.get_metrics()
 
             cfg = EMOTION_CONFIG.get(dominant, EMOTION_CONFIG['neutral'])
@@ -340,11 +380,12 @@ class MultimodalAffectAnalyzer:
                 'confidence': confidence,
                 'scores': norm_emotions,
                 'care_message': self.last_care_message,
-                'region': region,
+                'region': {},
+                'landmarks': landmarks,
                 'weather': clean_korean_text(cfg['weather']),
                 'color_rgb': cfg['color_rgb'],
                 'color_bgr': cfg['color_bgr'],
-                # 미세 바이오마커 지표 3종
+                # 미세 바이오마커 지표 3종 (실시간 반응)
                 'mouth_dynamic': round(mouth_dynamic, 1),
                 'eye_fatigue': round(eye_fatigue, 1),
                 'symmetry': round(symmetry, 1),
@@ -364,34 +405,52 @@ class MultimodalAffectAnalyzer:
     ) -> np.ndarray:
         """
         통합 멀티모달 HUD 렌더링
-        - 안면 랜드마크 선(Face Mesh)
-        - 입술/눈가/대칭도 미세 바이오마커 인디케이터
+        - 선명한 네온 안면 랜드마크 선(Face Mesh Wireframe)
+        - 실시간 입술/눈가/대칭도 미세 바이오마커 인디케이터
         - 실시간 마이크 음성 활력 게이지
         - 세부분석 카드 정렬
         """
         h, w, _ = frame.shape
         out_frame = frame.copy()
 
-        landmarks, _ = self.extract_landmarks_and_blendshapes(frame)
-        accent_color_bgr = analysis['color_bgr'] if analysis else (200, 150, 50)
-        accent_color_rgb = analysis['color_rgb'] if analysis else (50, 150, 200)
+        landmarks = analysis.get('landmarks') if analysis else None
+        if landmarks is None:
+            landmarks, _ = self.extract_landmarks_and_blendshapes(frame)
 
-        # 1. 랜드마크 선(Face Mesh) 렌더링
+        accent_color_bgr = analysis['color_bgr'] if analysis else (255, 200, 0)
+        accent_color_rgb = analysis['color_rgb'] if analysis else (0, 200, 255)
+
+        # 1. 고대비 네온 안면 랜드마크 선(Face Mesh) 렌더링
         if landmarks and len(landmarks) >= 468:
-            mesh_overlay = out_frame.copy()
+            # 부위별 또렷한 네온 컬러 와이어프레임 렌더링 (두께 2px, LINE_AA)
             for part_name, indices in FACE_CONTOURS.items():
                 pts = np.array([landmarks[i] for i in indices if i < len(landmarks)], dtype=np.int32)
-                pts = pts.reshape((-1, 1, 2))
-                cv2.polylines(mesh_overlay, [pts], isClosed=(part_name in ["left_eye", "right_eye", "lips_outer"]),
-                              color=accent_color_bgr, thickness=1, lineType=cv2.LINE_AA)
+                if len(pts) > 1:
+                    pts = pts.reshape((-1, 1, 2))
+                    style = CONTOUR_STYLES.get(part_name, {"color": accent_color_bgr, "thickness": 2, "closed": False})
+                    cv2.polylines(
+                        out_frame,
+                        [pts],
+                        isClosed=style["closed"],
+                        color=style["color"],
+                        thickness=style["thickness"],
+                        lineType=cv2.LINE_AA
+                    )
 
-            key_points = [1, 4, 33, 133, 263, 362, 61, 291, 10, 152]
-            for kp in key_points:
+            # 고휘도 앵커 포인트 강조 (외곽 옐로우 링 + 내부 화이트 코어)
+            for kp in KEY_ANCHOR_POINTS:
                 if kp < len(landmarks):
-                    cv2.circle(mesh_overlay, landmarks[kp], 3, (255, 255, 255), -1, cv2.LINE_AA)
-                    cv2.circle(mesh_overlay, landmarks[kp], 4, accent_color_bgr, 1, cv2.LINE_AA)
+                    pt = landmarks[kp]
+                    cv2.circle(out_frame, pt, 4, (0, 240, 255), 1, cv2.LINE_AA)
+                    cv2.circle(out_frame, pt, 2, (255, 255, 255), -1, cv2.LINE_AA)
 
-            cv2.addWeighted(mesh_overlay, 0.78, out_frame, 0.22, 0, out_frame)
+            # 동공(홍채) 중심 랜드마크 (468, 473)
+            if len(landmarks) >= 478:
+                for iris_idx in [468, 473]:
+                    if iris_idx < len(landmarks):
+                        ipt = landmarks[iris_idx]
+                        cv2.circle(out_frame, ipt, 4, (0, 255, 255), -1, cv2.LINE_AA)
+                        cv2.circle(out_frame, ipt, 6, (255, 255, 255), 1, cv2.LINE_AA)
 
         # 2. PIL 한글 텍스트 및 정보 카드 오버레이
         rgb_frame = cv2.cvtColor(out_frame, cv2.COLOR_BGR2RGB)

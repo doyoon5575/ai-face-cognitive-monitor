@@ -113,7 +113,7 @@ if HAS_WEBRTC:
             img = cv2.flip(img, 1)
             self.frame_count += 1
 
-            if self.frame_count % 3 == 0 or self.last_analysis is None:
+            if self.frame_count % 2 == 0 or self.last_analysis is None:
                 analysis = self.analyzer.analyze_frame(img)
                 if analysis:
                     self.last_analysis = analysis

@@ -233,9 +233,9 @@ class MultimodalAffectAnalyzer:
                     base_options=base_options,
                     running_mode=vision.RunningMode.IMAGE,
                     num_faces=1,
-                    min_face_detection_confidence=0.35,
-                    min_face_presence_confidence=0.35,
-                    min_tracking_confidence=0.35,
+                    min_face_detection_confidence=0.25,
+                    min_face_presence_confidence=0.25,
+                    min_tracking_confidence=0.25,
                     output_face_blendshapes=True
                 )
                 self._mp_landmarker = vision.FaceLandmarker.create_from_options(options)
@@ -277,13 +277,18 @@ class MultimodalAffectAnalyzer:
             # 1. 안면 랜드마크 및 52종 미세 표정 근육(Blendshapes) 추출
             landmarks, blendshapes = self.extract_landmarks_and_blendshapes(frame)
 
-            # 얼굴 미감지 시 기본값 유지 또는 마지막 결과 반환
+            # 얼굴 미감지 시: landmarks가 있으면 blendshapes만 기본값으로 채우고 계속 진행
             if not blendshapes:
-                if self.last_result:
+                if landmarks:
+                    # 랜드마크는 감지되었지만 blendshape는 실패한 경우 - 기본값으로 진행
+                    blendshapes = {}
+                elif self.last_result:
+                    # 얼굴 자체가 미감지 - 직전 결과 반환 (landmarks=None 포함)
                     res = self.last_result.copy()
-                    res['landmarks'] = landmarks
+                    res['landmarks'] = None  # 명시적으로 None (현재 프레임에서 미감지)
                     return res
-                blendshapes = {}
+                else:
+                    blendshapes = {}
 
             # 2. 미세 근육(FACS Action Units) 추출
             smile_l = blendshapes.get('mouthSmileLeft', 0.0)
@@ -419,6 +424,21 @@ class MultimodalAffectAnalyzer:
 
         accent_color_bgr = analysis['color_bgr'] if analysis else (255, 200, 0)
         accent_color_rgb = analysis['color_rgb'] if analysis else (0, 200, 255)
+
+        # 얼굴 미감지 시 화면 중앙에 안내 텍스트 표시
+        if not landmarks or len(landmarks) < 468:
+            guide_text = "FACE NOT DETECTED"
+            font_scale = max(0.6, min(w, h) / 800.0)
+            thickness = max(1, int(font_scale * 2))
+            (tw, th), _ = cv2.getTextSize(guide_text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
+            tx = (w - tw) // 2
+            ty = (h + th) // 2
+            # 반투명 배경
+            cv2.rectangle(out_frame, (tx - 12, ty - th - 12), (tx + tw + 12, ty + 12), (0, 0, 0), -1)
+            cv2.putText(out_frame, guide_text, (tx, ty), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 200, 255), thickness, cv2.LINE_AA)
+            guide_ko = "Please face the camera"
+            (tw2, th2), _ = cv2.getTextSize(guide_ko, cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, max(1, thickness - 1))
+            cv2.putText(out_frame, guide_ko, ((w - tw2) // 2, ty + th + 10), cv2.FONT_HERSHEY_SIMPLEX, font_scale * 0.6, (200, 220, 255), max(1, thickness - 1), cv2.LINE_AA)
 
         # 1. 고대비 네온 안면 랜드마크 선(Face Mesh) 렌더링
         if landmarks and len(landmarks) >= 468:

@@ -250,7 +250,11 @@ def main():
                         st.image(rgb_frame, use_container_width=True, caption="AI 안면 랜드마크 & 생체 바이오마커 분석 결과")
 
                         if analysis:
-                            st.success(f"✅ 분석 완료: **{analysis['dominant_ko']}** (일치도 {analysis['confidence']:.0f}%) | 눈가 피로도 {analysis.get('eye_fatigue', 20):.0f}% | 안면 대칭도 {analysis.get('symmetry', 95):.0f}%")
+                            has_landmarks = analysis.get('landmarks') is not None and len(analysis.get('landmarks', [])) >= 468
+                            if has_landmarks:
+                                st.success(f"✅ 분석 완료: **{analysis['dominant_ko']}** (일치도 {analysis['confidence']:.0f}%) | 눈가 피로도 {analysis.get('eye_fatigue', 20):.0f}% | 안면 대칭도 {analysis.get('symmetry', 95):.0f}%")
+                            else:
+                                st.warning("⚠️ 얼굴이 정면으로 감지되지 않았습니다. **카메라를 정면으로 바라보며** 다시 사진을 찍어주세요. 정면 얼굴이 보여야 네온 랜드마크 선과 정밀 수치가 표시됩니다.")
                             st.info(f"💡 {analysis.get('care_message', '')}")
             else:
                 st.markdown("""
